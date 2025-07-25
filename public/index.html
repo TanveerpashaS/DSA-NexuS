@@ -54,8 +54,11 @@
             animation-duration: 30s; animation-direction: reverse;
         }
         .app-container {
-            display: flex; height: 100dvh;
-            overflow: hidden; position: relative; z-index: 1;
+            display: flex;
+            height: 100dvh; /* Use dvh for better mobile keyboard handling */
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
         .sidebar {
             width: 260px; background: var(--sidebar-color); backdrop-filter: blur(15px);
@@ -151,7 +154,6 @@
         .mobile-header { display: none; }
         #mobile-menu-overlay { display: none; }
 
-        /* --- REWRITTEN MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
             .app-container.menu-open .sidebar {
                 transform: translateX(0);
@@ -166,7 +168,6 @@
             .chat-interface {
                 width: 100%;
             }
-            /* Make space for the fixed header and input bar */
             .chat-container {
                 padding-top: var(--header-height-mobile);
                 padding-bottom: var(--input-area-height-mobile);
@@ -183,7 +184,6 @@
                 background: none; border: none; color: var(--text-color);
                 font-size: 24px; cursor: pointer; padding: 10px;
             }
-            /* Fix the input bar to the bottom */
             .chat-input-area {
                 position: fixed; bottom: 0; left: 0; width: 100%;
                 padding: 10px 15px; height: var(--input-area-height-mobile);
@@ -212,9 +212,7 @@
 
         <main class="chat-interface">
             <div class="mobile-header">
-                <div class="logo">
-                    <div class="center-node"></div>
-                </div>
+                <div class="logo"></div>
                 <span>DSANexus</span>
                 <button id="menu-toggle-btn"><i class="fas fa-bars"></i></button>
             </div>
@@ -245,7 +243,6 @@
     </div>
 
     <script>
-        // --- Core Application Logic ---
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
         const chatWindow = document.getElementById('chat-window');
@@ -260,6 +257,7 @@
         let conversationHistory = [];
 
         function createLogo(container, isLarge = false) {
+            if (!container) return;
             container.innerHTML = '';
             const centerNode = document.createElement('div');
             centerNode.className = 'center-node';
@@ -276,7 +274,6 @@
         createLogo(document.getElementById('sidebar-logo'));
         createLogo(document.getElementById('welcome-logo'), true);
         createLogo(document.querySelector('.mobile-header .logo'));
-
 
         function hideWelcomeScreen() {
             if (welcomeScreen) welcomeScreen.style.display = 'none';
@@ -404,9 +401,11 @@
         
         document.querySelectorAll('.new-chat-btn').forEach(button => {
             button.addEventListener('click', () => {
-                chatWindow.innerHTML = '';
-                if (welcomeScreen) {
-                    welcomeScreen.style.display = 'flex';
+                const messages = chatWindow.querySelectorAll('.message');
+                messages.forEach(msg => msg.remove());
+                const welcome = document.getElementById('welcome-screen');
+                if (welcome) {
+                    welcome.style.display = 'flex';
                 }
                 conversationHistory = [];
                 appContainer.classList.remove('menu-open');
@@ -426,6 +425,15 @@
         
         mobileMenuOverlay.addEventListener('click', () => {
             appContainer.classList.remove('menu-open');
+        });
+        
+        // --- ADDED: MOBILE KEYBOARD FIX ---
+        userInput.addEventListener('focus', () => {
+            // Give the browser a moment to bring up the keyboard
+            setTimeout(() => {
+                // Scroll the input form into view
+                chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 300);
         });
 
     </script>
