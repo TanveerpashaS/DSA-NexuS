@@ -1,16 +1,18 @@
-# File: netlify.toml
+# File: netlify.toml (This is the final, corrected version)
 
 [build]
-  # Tells Netlify that your website's files are in the "public" folder.
   publish = "public"
-  # Tells Netlify that your backend functions are in the "api" folder.
   functions = "api"
 
 [[redirects]]
-  # This rule makes sure that when your frontend calls "/api/chat"...
   from = "/api/*"
-  # ...Netlify correctly routes it to your backend function.
   to = "/.netlify/functions/:splat"
   status = 200
- force = true 
+  force = true
 
+# ADD THIS NEW SECTION AT THE BOTTOM
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    # This tells Netlify's system not to alter the API request
+    X-Netlify-Cache-Control = "no-cache"
