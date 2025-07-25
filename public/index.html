@@ -61,7 +61,6 @@
             font-size: 14px; border: 1px solid rgba(255,255,255,0.1);
             white-space: pre-wrap; word-break: break-all;
         }
-        /* All other styles are condensed for brevity but are the same */
         @keyframes aurora-animation { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         body::before, body::after { content: ''; position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax; background-image: radial-gradient(circle, var(--highlight-color) 0%, transparent 40%); opacity: 0.15; filter: blur(100px); animation: aurora-animation 40s linear infinite; z-index: 0; }
@@ -91,9 +90,9 @@
         #send-button:hover { filter: brightness(1.2); }
         #send-button:disabled { background-color: #444; color: #888; cursor: not-allowed; }
         .message-content { padding-top: 2px; width: 100%; }
-        .message-content h3 { margin-bottom: 10px; } /* For ### headers */
+        .message-content h3 { margin-bottom: 10px; }
         .message-content p:not(:last-child) { margin-bottom: 0.75rem; }
-        .message-content ul { padding-left: 20px; margin-bottom: 10px; } /* For * or - lists */
+        .message-content ul { padding-left: 20px; margin-bottom: 10px; }
         .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 500; flex-shrink: 0; }
         .bot-avatar { background: var(--bot-msg-color); }
         .user-avatar { background: var(--user-msg-color); color: var(--highlight-color); font-weight: 600; }
@@ -158,7 +157,8 @@
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
         const chatWindow = document.getElementById('chat-window');
-        // ... all other element selectors are the same
+        // THIS LINE WAS MISSING. IT IS NOW FIXED.
+        const sendButton = document.getElementById('send-button');
         const welcomeScreen = document.getElementById('welcome-screen');
         const appContainer = document.getElementById('app-container');
         const menuToggleBtn = document.getElementById('menu-toggle-btn');
@@ -166,17 +166,14 @@
         const API_URL = '/api/chat';
         let conversationHistory = [];
 
-        // --- UPDATED JAVASCRIPT TO FIX MARKDOWN FORMATTING ---
         function typeWriterEffect(element, text) {
             return new Promise(resolve => {
                 const parts = text.split(/(```[\s\S]*?```)/g);
                 let partIndex = 0;
-
                 const processNextPart = () => {
                     if (partIndex >= parts.length) { resolve(); return; }
                     const part = parts[partIndex];
                     if (!part) { partIndex++; processNextPart(); return; }
-
                     if (part.startsWith('```')) {
                         const codeContent = part.slice(3, -3).trim();
                         const pre = document.createElement('pre');
@@ -186,15 +183,13 @@
                         partIndex++;
                         processNextPart();
                     } else {
-                        // Process markdown line-by-line
                         let processedHTML = part
                             .trim()
                             .replace(/### (.*)/g, '<h3>$1</h3>')
                             .replace(/^\* (.*)/gm, '<ul><li>$1</li></ul>')
-                            .replace(/<\/ul>\s*<ul>/g, '') // Merge adjacent lists
+                            .replace(/<\/ul>\s*<ul>/g, '')
                             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                             .replace(/\*(.*?)\*/g, '<em>$1</em>');
-                        
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = processedHTML;
                         element.appendChild(tempDiv);
@@ -207,7 +202,7 @@
             });
         }
         
-        // All other JavaScript functions are the same and correct
+        // All other JavaScript functions are correct and unchanged
         function createLogo(container, isLarge = false) { if (!container) return; container.innerHTML = ''; const centerNode = document.createElement('div'); centerNode.className = 'center-node'; container.appendChild(centerNode); const numLines = isLarge ? 8 : 6; for (let i = 0; i < numLines; i++) { const line = document.createElement('div'); line.className = 'line'; line.style.transform = `translate(-50%, -50%) rotate(${i * (360 / numLines)}deg)`; container.appendChild(line); } }
         createLogo(document.getElementById('sidebar-logo')); createLogo(document.getElementById('welcome-logo'), true); createLogo(document.querySelector('.mobile-header .logo'));
         function hideWelcomeScreen() { if (welcomeScreen) welcomeScreen.style.display = 'none'; }
