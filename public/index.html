@@ -10,214 +10,223 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
-    :root {
-        --bg-color: #121212;
-        --sidebar-color: rgba(28, 28, 30, 0.7);
-        --chat-container-bg: rgba(20, 20, 22, 0.6);
-        --user-msg-color: #2c2c34;
-        --bot-msg-color: #1e1f24;
-        --text-color: #e2e2e2;
-        --highlight-color: #FF6F61; /* A vibrant coral/orange for "Nexus" */
-        --glow-color: rgba(255, 111, 97, 0.4);
-        --font-main: 'Inter', sans-serif;
-        --font-code: 'Source Code Pro', monospace;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    @keyframes aurora-animation {
-        0% { transform: translate(-50%, -50%) rotate(0deg); }
-        100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    body {
-        font-family: var(--font-main);
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        overflow: hidden; /* Prevents scroll on the body itself */
-        position: relative;
-    }
-    body::before, body::after {
-        content: ''; position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax;
-        background-image: radial-gradient(circle, var(--highlight-color) 0%, transparent 40%);
-        opacity: 0.15; filter: blur(100px); animation: aurora-animation 40s linear infinite;
-    }
-    body::after {
-        width: 80vmax; height: 80vmax;
-        background-image: radial-gradient(circle, #3b82f6 0%, transparent 40%);
-        animation-duration: 30s; animation-direction: reverse;
-    }
-    .app-container {
-        display: flex;
-        height: 100vh;
-        /* FIX: This is the critical fix for the horizontal scrollbar. */
-        /* It ensures the large background effect is clipped and does not overflow. */
-        overflow: hidden;
-        position: relative;
-        z-index: 2;
-    }
-    .sidebar {
-        width: 260px;
-        background: var(--sidebar-color);
-        backdrop-filter: blur(15px);
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
-        transition: transform 0.3s ease-in-out; /* Added for potential future toggle */
-    }
-    .sidebar-header {
-        display: flex; align-items: center; gap: 12px; margin-bottom: 30px;
-    }
-    .logo {
-        width: 36px; height: 36px; position: relative;
-        display: flex; justify-content: center; align-items: center;
-    }
-    .logo .center-node {
-        width: 12px; height: 12px; background: var(--highlight-color); border-radius: 50%;
-        box-shadow: 0 0 10px var(--glow-color); z-index: 2;
-    }
-    .logo .line {
-        position: absolute; height: 2px; background: rgba(255, 111, 97, 0.6);
-        width: 16px; top: 50%; left: 50%; transform-origin: 0% 50%; z-index: 1;
-    }
-    .sidebar-header h1 { font-size: 22px; font-weight: 600; }
-    .new-chat-btn {
-        width: 100%; padding: 12px; background-color: var(--user-msg-color);
-        color: var(--text-color); border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px; font-size: 16px; cursor: pointer;
-        transition: all 0.2s ease; display: flex; align-items: center;
-        justify-content: center; gap: 10px;
-    }
-    .new-chat-btn:hover { background-color: var(--highlight-color); border-color: var(--highlight-color); }
-    .chat-interface {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        overflow: hidden; /* Added to ensure layout consistency */
-    }
-    .chat-container {
-        width: 100%;
-        max-width: 800px;
-        height: 100%;
-        margin: 0 auto; /* Horizontally centers the container on larger screens */
-        display: flex;
-        flex-direction: column;
-    }
-    .chat-window {
-        flex-grow: 1;
-        padding: 20px;
-        overflow-y: auto;
-        position: relative;
-    }
-    .chat-window::-webkit-scrollbar { width: 6px; }
-    .chat-window::-webkit-scrollbar-track { background: transparent; }
-    .chat-window::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 6px; }
-    #welcome-screen {
-        height: 100%; display: flex; flex-direction: column;
-        justify-content: center; align-items: center; text-align: center;
-    }
-    #welcome-screen .logo { transform: scale(1.5); margin-bottom: 20px;}
-    #welcome-screen h2 { font-size: 32px; margin-top: 20px; }
-    #welcome-screen p { color: #aaa; margin-top: 8px; }
-    .example-prompts { margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-    .example-prompt {
-        padding: 12px 18px; background: var(--user-msg-color);
-        border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-        cursor: pointer; transition: all 0.2s ease;
-    }
-    .example-prompt:hover { background-color: #333644; transform: translateY(-3px); }
-    .chat-input-area {
-        padding: 1rem 20px;
-        background: transparent; /* Ensures it blends with the container */
-    }
-    .chat-form {
-        display: flex; background: var(--bot-msg-color);
-        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
-        padding: 8px; transition: box-shadow 0.2s;
-    }
-    .chat-form:focus-within { box-shadow: 0 0 15px var(--glow-color); }
-    #user-input {
-        flex-grow: 1; background: transparent; border: none; outline: none;
-        color: var(--text-color); font-size: 16px; padding: 0 10px;
-    }
-    #send-button {
-        background-color: var(--highlight-color); border: none;
-        color: white; font-size: 16px; width: 40px; height: 40px;
-        border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
-    }
-    #send-button:hover { filter: brightness(1.2); }
-    #send-button:disabled { background-color: #444; color: #888; cursor: not-allowed; }
-    .message {
-        max-width: 95%; padding: 1rem; display: flex; gap: 15px;
-        animation: fadeInUp 0.4s ease-out; line-height: 1.7;
-    }
-    .message-content { padding-top: 2px; width: 100%; }
-    .message p:not(:last-child) { margin-bottom: 0.75rem; }
-    .avatar {
-        width: 36px; height: 36px; border-radius: 50%; display: flex;
-        align-items: center; justify-content: center; font-weight: 500;
-        flex-shrink: 0;
-    }
-    .bot-avatar { background: var(--bot-msg-color); }
-    .user-avatar { background: var(--user-msg-color); color: var(--highlight-color); font-weight: 600; }
-    .message-content pre {
-        background-color: #0d0d0d; padding: 15px;
-        border-radius: 8px; overflow-x: auto; margin: 1rem 0;
-        font-family: var(--font-code); font-size: 14px;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    /* --- ADDED: Full Mobile Responsiveness --- */
-    @media (max-width: 768px) {
+        :root {
+            --bg-color: #121212;
+            --sidebar-color: rgba(28, 28, 30, 0.95);
+            --chat-container-bg: rgba(20, 20, 22, 0.6);
+            --user-msg-color: #2c2c34;
+            --bot-msg-color: #1e1f24;
+            --text-color: #e2e2e2;
+            --highlight-color: #FF6F61;
+            --glow-color: rgba(255, 111, 97, 0.4);
+            --font-main: 'Inter', sans-serif;
+            --font-code: 'Source Code Pro', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @keyframes aurora-animation {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            position: relative;
+        }
+        body::before, body::after {
+            content: ''; position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax;
+            background-image: radial-gradient(circle, var(--highlight-color) 0%, transparent 40%);
+            opacity: 0.15; filter: blur(100px); animation: aurora-animation 40s linear infinite;
+        }
+        body::after {
+            width: 80vmax; height: 80vmax;
+            background-image: radial-gradient(circle, #3b82f6 0%, transparent 40%);
+            animation-duration: 30s; animation-direction: reverse;
+        }
+        .app-container {
+            display: flex; height: 100vh;
+            overflow: hidden; position: relative; z-index: 2;
+        }
         .sidebar {
-            /* Hide the sidebar completely on mobile */
-            display: none;
+            width: 260px; background: var(--sidebar-color); backdrop-filter: blur(15px);
+            padding: 20px; display: flex; flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease-in-out;
         }
-
+        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
+        .logo {
+            width: 36px; height: 36px; position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .logo .center-node {
+            width: 12px; height: 12px; background: var(--highlight-color); border-radius: 50%;
+            box-shadow: 0 0 10px var(--glow-color); z-index: 2;
+        }
+        .logo .line {
+            position: absolute; height: 2px; background: rgba(255, 111, 97, 0.6);
+            width: 16px; top: 50%; left: 50%; transform-origin: 0% 50%; z-index: 1;
+        }
+        .sidebar-header h1 { font-size: 22px; font-weight: 600; }
+        .new-chat-btn {
+            width: 100%; padding: 12px; background-color: var(--user-msg-color);
+            color: var(--text-color); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; font-size: 16px; cursor: pointer;
+            transition: all 0.2s ease; display: flex; align-items: center;
+            justify-content: center; gap: 10px;
+        }
+        .new-chat-btn:hover { background-color: var(--highlight-color); border-color: var(--highlight-color); }
+        .chat-interface {
+            flex-grow: 1; display: flex; flex-direction: column; height: 100%;
+        }
         .chat-container {
-            /* Let the chat container use the full screen width */
-            max-width: 100%;
+            width: 100%; max-width: 800px; height: 100%;
+            margin: 0 auto; display: flex; flex-direction: column;
         }
-
-        .chat-window {
-            /* Reduce padding on mobile for more space */
-            padding: 10px;
+        .chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; }
+        .chat-window::-webkit-scrollbar { width: 6px; }
+        .chat-window::-webkit-scrollbar-track { background: transparent; }
+        .chat-window::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 6px; }
+        #welcome-screen {
+            height: 100%; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
         }
-
-        .chat-input-area {
-            /* Adjust padding for a cleaner look on mobile */
-            padding: 10px;
+        #welcome-screen .logo { transform: scale(1.5); margin-bottom: 20px;}
+        #welcome-screen h2 { font-size: 32px; margin-top: 20px; }
+        #welcome-screen p { color: #aaa; margin-top: 8px; }
+        .example-prompts { margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .example-prompt {
+            padding: 12px 18px; background: var(--user-msg-color);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            cursor: pointer; transition: all 0.2s ease;
         }
-
-        /* Adjust font size for better readability on small screens */
+        .example-prompt:hover { background-color: #333644; transform: translateY(-3px); }
+        .chat-input-area { padding: 1rem 20px; background: transparent; }
+        .chat-form {
+            display: flex; background: var(--bot-msg-color);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            padding: 8px; transition: box-shadow 0.2s;
+        }
+        .chat-form:focus-within { box-shadow: 0 0 15px var(--glow-color); }
+        #user-input {
+            flex-grow: 1; background: transparent; border: none; outline: none;
+            color: var(--text-color); font-size: 16px; padding: 0 10px;
+        }
+        #send-button {
+            background-color: var(--highlight-color); border: none;
+            color: white; font-size: 16px; width: 40px; height: 40px;
+            border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+        }
+        #send-button:hover { filter: brightness(1.2); }
+        #send-button:disabled { background-color: #444; color: #888; cursor: not-allowed; }
         .message {
-            font-size: 15px;
-            gap: 10px;
+            max-width: 95%; padding: 1rem; display: flex; gap: 15px;
+            animation: fadeInUp 0.4s ease-out; line-height: 1.7;
         }
-        
+        .message-content { padding-top: 2px; width: 100%; }
+        .message p:not(:last-child) { margin-bottom: 0.75rem; }
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 36px; height: 36px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-weight: 500;
+            flex-shrink: 0;
         }
-    }
-</style>
+        .bot-avatar { background: var(--bot-msg-color); }
+        .user-avatar { background: var(--user-msg-color); color: var(--highlight-color); font-weight: 600; }
+        .message-content pre {
+            background-color: #0d0d0d; padding: 15px;
+            border-radius: 8px; overflow-x: auto; margin: 1rem 0;
+            font-family: var(--font-code); font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* --- MOBILE HEADER & MENU STYLES (HIDDEN ON DESKTOP) --- */
+        .mobile-header { display: none; }
+        #mobile-menu-overlay { display: none; }
+
+        /* --- FULL RESPONSIVENESS FOR MOBILE --- */
+        @media (max-width: 768px) {
+            .app-container.menu-open .sidebar {
+                transform: translateX(0);
+            }
+            .app-container.menu-open #mobile-menu-overlay {
+                display: block;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                z-index: 1000;
+                transform: translateX(-100%);
+            }
+            .chat-interface {
+                /* Make space for the fixed header at the top */
+                padding-top: 60px;
+            }
+            .chat-container { max-width: 100%; }
+            .chat-window { padding: 10px; }
+            .chat-input-area { padding: 10px; }
+            .message { font-size: 15px; gap: 10px; }
+            .avatar { width: 32px; height: 32px; }
+            
+            /* Styles for the mobile header (visible on mobile) */
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 15px;
+                background-color: var(--bot-msg-color);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                font-weight: 600;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 60px;
+                z-index: 900;
+            }
+            #menu-toggle-btn {
+                background: none;
+                border: none;
+                color: var(--text-color);
+                font-size: 24px;
+                cursor: pointer;
+            }
+            #mobile-menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                display: none; /* Hidden by default */
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar">
+    <div class="app-container" id="app-container">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo" id="sidebar-logo"></div>
                 <h1>DSANexus</h1>
             </div>
-            <button class="new-chat-btn" id="new-chat-btn">
+            <button class="new-chat-btn">
                 <i class="fas fa-plus"></i> New Chat
             </button>
         </aside>
 
         <main class="chat-interface">
+            <div class="mobile-header">
+                <span>DSANexus</span>
+                <button id="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+            </div>
+            
             <div class="chat-container">
                 <div class="chat-window" id="chat-window">
                     <div id="welcome-screen">
@@ -239,6 +248,8 @@
                 </div>
             </div>
         </main>
+        
+        <div id="mobile-menu-overlay"></div>
     </div>
 
     <script>
@@ -247,13 +258,14 @@
         const userInput = document.getElementById('user-input');
         const chatWindow = document.getElementById('chat-window');
         const sendButton = document.getElementById('send-button');
-        const newChatBtn = document.getElementById('new-chat-btn');
         const welcomeScreen = document.getElementById('welcome-screen');
         
-        // This now points to our simple backend function
-        const API_URL = '/api/chat';
+        // --- ADDED: Elements for Mobile Menu ---
+        const appContainer = document.getElementById('app-container');
+        const menuToggleBtn = document.getElementById('menu-toggle-btn');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
         
-        // This will store the chat history to provide context
+        const API_URL = '/api/chat';
         let conversationHistory = [];
 
         // --- Logo Generation ---
@@ -262,7 +274,6 @@
             const centerNode = document.createElement('div');
             centerNode.className = 'center-node';
             container.appendChild(centerNode);
-
             const numLines = isLarge ? 8 : 6;
             for (let i = 0; i < numLines; i++) {
                 const line = document.createElement('div');
@@ -282,13 +293,10 @@
 
         async function displayMessage(text, sender) {
             hideWelcomeScreen();
-            
             const messageWrapper = document.createElement('div');
             messageWrapper.classList.add('message');
-
             const avatar = document.createElement('div');
             avatar.classList.add('avatar', `${sender}-avatar`);
-
             if (sender === 'bot') {
                 const logoContainer = document.createElement('div');
                 logoContainer.className = 'logo';
@@ -297,14 +305,11 @@
             } else {
                 avatar.textContent = 'Y';
             }
-
             const contentDiv = document.createElement('div');
             contentDiv.classList.add('message-content');
-            
             messageWrapper.appendChild(avatar);
             messageWrapper.appendChild(contentDiv);
             chatWindow.appendChild(messageWrapper);
-
             if (sender === 'bot') {
                 await typeWriterEffect(contentDiv, text);
             } else {
@@ -320,12 +325,10 @@
             return new Promise(resolve => {
                 const parts = text.split(/(```[\s\S]*?```)/g);
                 let partIndex = 0;
-                
                 const processNextPart = () => {
                     if (partIndex >= parts.length) { resolve(); return; }
                     const part = parts[partIndex];
                     if (!part) { partIndex++; processNextPart(); return; }
-
                     if (part.startsWith('```')) {
                         const codeContent = part.slice(3, -3);
                         const pre = document.createElement('pre');
@@ -337,7 +340,6 @@
                     } else {
                         const lines = part.split('\n').filter(line => line.trim() !== '');
                         let lineIndex = 0;
-
                         const typeNextLine = () => {
                             if (lineIndex >= lines.length) { partIndex++; processNextPart(); return; }
                             const p = document.createElement('p');
@@ -366,48 +368,36 @@
         
         async function submitQuery(query) {
             if (!query) return;
-            
             sendButton.disabled = true;
             userInput.disabled = true;
-            
             await displayMessage(query, 'user');
             userInput.value = '';
-            
             conversationHistory.push({ role: "user", parts: [{ text: query }] });
-
             const loadingMessage = await displayMessage('', 'bot');
             loadingMessage.querySelector('.message-content').innerHTML = `Thinking...`;
-            
-            // This is the simplified body, only sending the history
             const requestBody = { conversationHistory };
-
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody) // Send the simplified body
+                    body: JSON.stringify(requestBody)
                 });
-                
                 loadingMessage.remove();
-                
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error.message || 'An unknown network error occurred.');
                 }
-
                 const data = await response.json();
                 let botResponse = "Sorry, I couldn't generate a response. The content might have been blocked.";
                 if (data.candidates?.[0]?.content) {
                     botResponse = data.candidates[0].content.parts[0].text;
                 }
-                
                 conversationHistory.push({ role: "model", parts: [{ text: botResponse }] });
                 await displayMessage(botResponse, 'bot');
-
             } catch (error) {
                 if(loadingMessage) loadingMessage.remove();
                 await displayMessage(`Error: ${error.message}`, 'bot');
-                conversationHistory.pop(); // Remove the user query that caused an error
+                conversationHistory.pop();
             } finally {
                 sendButton.disabled = false;
                 userInput.disabled = false;
@@ -421,12 +411,17 @@
             submitQuery(userInput.value.trim());
         });
         
-        newChatBtn.addEventListener('click', () => {
-            chatWindow.innerHTML = '';
-            if (welcomeScreen) {
-                welcomeScreen.style.display = 'flex';
-            }
-            conversationHistory = [];
+        // --- UPDATED: New Chat for both desktop and mobile ---
+        document.querySelectorAll('.new-chat-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                chatWindow.innerHTML = '';
+                if (welcomeScreen) {
+                    welcomeScreen.style.display = 'flex';
+                }
+                conversationHistory = [];
+                // Close mobile menu if it's open
+                appContainer.classList.remove('menu-open');
+            });
         });
 
         document.querySelectorAll('.example-prompt').forEach(button => {
@@ -435,6 +430,16 @@
                 submitQuery(promptText);
             });
         });
+        
+        // --- ADDED: Logic for Mobile Menu Toggle ---
+        menuToggleBtn.addEventListener('click', () => {
+            appContainer.classList.toggle('menu-open');
+        });
+        
+        mobileMenuOverlay.addEventListener('click', () => {
+            appContainer.classList.remove('menu-open');
+        });
+
     </script>
 </body>
 </html>
