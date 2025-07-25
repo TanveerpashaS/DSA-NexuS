@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSANexus - The Center for DSA Knowledge</title>
+    <title>DSA-NexuS - The Center for DSA Knowledge</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
@@ -172,6 +172,20 @@
                 padding-top: var(--header-height-mobile);
                 padding-bottom: var(--input-area-height-mobile);
             }
+            .chat-window {
+    /* This reduces the space on the left and right */
+    padding: 10px 5px;
+}
+.message {
+    /* This makes the text a bit smaller on mobile */
+    font-size: 15px;
+    gap: 10px;
+}
+.avatar {
+    /* This makes the avatars a bit smaller */
+    width: 32px;
+    height: 32px;
+}
             .mobile-header {
                 display: flex; align-items: center; justify-content: space-between;
                 padding: 0 15px; background-color: var(--header-color);
@@ -203,7 +217,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo" id="sidebar-logo"></div>
-                <h1>DSANexus</h1>
+                <h1>DSA-NexuS</h1>
             </div>
             <button class="new-chat-btn">
                 <i class="fas fa-plus"></i> New Chat
