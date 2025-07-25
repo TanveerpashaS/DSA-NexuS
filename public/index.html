@@ -139,6 +139,27 @@
             font-family: var(--font-code); font-size: 14px;
             border: 1px solid rgba(255,255,255,0.1);
         }
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                /* Hide the sidebar on small screens */
+                display: none;
+            }
+
+            .chat-container {
+                /* Allow the chat to use the full width */
+                max-width: 100%;
+            }
+
+            .chat-window {
+                /* Reduce padding on mobile for more space */
+                padding: 10px;
+            }
+
+            .chat-input-area {
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
