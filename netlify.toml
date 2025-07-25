@@ -12,4 +12,5 @@
   # ...Netlify correctly routes it to your backend function.
   to = "/.netlify/functions/:splat"
   status = 200
+ force = true 
 

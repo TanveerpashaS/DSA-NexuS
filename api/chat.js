@@ -2,6 +2,7 @@
 
 exports.handler = async function(event) {
   // 1. Check if the request is valid before processing
+   console.log("FULL REQUEST EVENT:", JSON.stringify(event, null, 2));
   if (event.httpMethod !== 'POST' || !event.body) {
     return {
       statusCode: 400, // Bad Request
