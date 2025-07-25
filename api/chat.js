@@ -1,11 +1,25 @@
-exports.handler = async function(event) {
-  const { conversationHistory } = JSON.parse(event.body);
-  const apiKey = process.env.GEMINI_API_KEY;
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+// This is the final, production-ready code for /api/chat.js
 
-  const systemInstruction = {
-    parts: [{
-        text: `You are DSANexus, an expert instructor. Your primary goal is **extreme readability**.
+exports.handler = async function(event) {
+  // 1. Check if the request is valid before processing
+  if (event.httpMethod !== 'POST' || !event.body) {
+    return {
+      statusCode: 400, // Bad Request
+      body: JSON.stringify({ error: 'Invalid request. Please send a POST with a body.' }),
+    };
+  }
+
+  try {
+    // 2. The JSON.parse is now safely inside the try block
+    const { conversationHistory } = JSON.parse(event.body);
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+    const systemInstruction = {
+      parts: [{
+        text: 
+  `You are DSANexus, an expert instructor. Your primary goal is **extreme readability**.
 
 **CONTEXT RULE:** You MUST maintain the context of the conversation. If a user's prompt is a short follow-up (e.g., "code", "why?", "give an example in python"), you must assume it refers to the immediately preceding topic. DO NOT treat it as an off-topic question.
 
@@ -44,7 +58,6 @@ You are **strictly focused** on DSA. If the user asks anything unrelated that is
     }]
   };
 
-  try {
     const googleApiResponse = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -55,15 +68,19 @@ You are **strictly focused** on DSA. If the user asks anything unrelated that is
         systemInstruction,
       }),
     });
+
     const data = await googleApiResponse.json();
+
     return {
       statusCode: 200,
       body: JSON.stringify(data),
     };
+
   } catch (error) {
+    console.error('Error in function execution:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to fetch from Google API' }),
+      body: JSON.stringify({ error: 'An internal error occurred.' }),
     };
   }
 };
