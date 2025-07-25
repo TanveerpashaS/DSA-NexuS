@@ -1,0 +1,14 @@
+# File: netlify.toml
+
+[build]
+  # Tells Netlify that your website's files are in the "public" folder.
+  publish = "public"
+  # Tells Netlify that your backend functions are in the "api" folder.
+  functions = "api"
+
+[[redirects]]
+  # This rule makes sure that when your frontend calls "/api/chat"...
+  from = "/api/*"
+  # ...Netlify correctly routes it to your backend function.
+  to = "/.netlify/functions/:splat"
+  status = 200
