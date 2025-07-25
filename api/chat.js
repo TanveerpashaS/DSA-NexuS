@@ -1,17 +1,16 @@
 // This is the final, production-ready code for /api/chat.js
 
 exports.handler = async function(event) {
-  // 1. Check if the request is valid before processing
-   console.log("FULL REQUEST EVENT:", JSON.stringify(event, null, 2));
-  if (event.httpMethod !== 'POST' || !event.body) {
+  // 1. Check if the request is a POST.
+  if (event.httpMethod !== 'POST') {
     return {
-      statusCode: 400, // Bad Request
-      body: JSON.stringify({ error: 'Invalid request. Please send a POST with a body.' }),
+      statusCode: 405, // Method Not Allowed
+      body: JSON.stringify({ error: 'Please use the POST method.' }),
     };
   }
 
   try {
-    // 2. The JSON.parse is now safely inside the try block
+    // 2. Safely parse the body. If the body is missing, the catch block will handle it.
     const { conversationHistory } = JSON.parse(event.body);
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -19,8 +18,7 @@ exports.handler = async function(event) {
 
     const systemInstruction = {
       parts: [{
-        text: 
-  `You are DSANexus, an expert instructor. Your primary goal is **extreme readability**.
+        text: `You are DSANexus, an expert instructor. Your primary goal is **extreme readability**.
 
 **CONTEXT RULE:** You MUST maintain the context of the conversation. If a user's prompt is a short follow-up (e.g., "code", "why?", "give an example in python"), you must assume it refers to the immediately preceding topic. DO NOT treat it as an off-topic question.
 
@@ -59,6 +57,7 @@ You are **strictly focused** on DSA. If the user asks anything unrelated that is
     }]
   };
 
+
     const googleApiResponse = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -78,10 +77,11 @@ You are **strictly focused** on DSA. If the user asks anything unrelated that is
     };
 
   } catch (error) {
-    console.error('Error in function execution:', error);
+    // This will now catch the error if event.body is missing
+    console.error('Error processing request:', error);
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'An internal error occurred.' }),
+      statusCode: 400, // Bad Request
+      body: JSON.stringify({ error: 'Invalid or empty request body received by the function.' }),
     };
   }
 };
