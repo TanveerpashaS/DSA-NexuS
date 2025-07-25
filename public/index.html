@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSA-NexuS - The Center for DSA Knowledge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DSANexus - The Center for DSA Knowledge</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
@@ -55,7 +55,7 @@
         }
         .app-container {
             display: flex;
-            height: 100dvh; /* Use dvh for better mobile keyboard handling */
+            height: 100dvh;
             overflow: hidden;
             position: relative;
             z-index: 1;
@@ -145,10 +145,17 @@
         .bot-avatar { background: var(--bot-msg-color); }
         .user-avatar { background: var(--user-msg-color); color: var(--highlight-color); font-weight: 600; }
         .message-content pre {
-            background-color: #0d0d0d; padding: 15px;
-            border-radius: 8px; overflow-x: auto; margin: 1rem 0;
-            font-family: var(--font-code); font-size: 14px;
+            background-color: #0d0d0d;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: var(--font-code);
+            font-size: 14px;
             border: 1px solid rgba(255,255,255,0.1);
+            /* FIX #2: These lines force code to wrap */
+            white-space: pre-wrap;
+            word-break: break-all;
         }
 
         .mobile-header { display: none; }
@@ -173,19 +180,17 @@
                 padding-bottom: var(--input-area-height-mobile);
             }
             .chat-window {
-    /* This reduces the space on the left and right */
-    padding: 10px 5px;
-}
-.message {
-    /* This makes the text a bit smaller on mobile */
-    font-size: 15px;
-    gap: 10px;
-}
-.avatar {
-    /* This makes the avatars a bit smaller */
-    width: 32px;
-    height: 32px;
-}
+                padding: 10px 5px;
+            }
+            .message {
+                font-size: 15px;
+                gap: 10px;
+                max-width: 100%;
+            }
+            .avatar {
+                width: 32px;
+                height: 32px;
+            }
             .mobile-header {
                 display: flex; align-items: center; justify-content: space-between;
                 padding: 0 15px; background-color: var(--header-color);
@@ -217,7 +222,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo" id="sidebar-logo"></div>
-                <h1>DSA-NexuS</h1>
+                <h1>DSANexus</h1>
             </div>
             <button class="new-chat-btn">
                 <i class="fas fa-plus"></i> New Chat
@@ -441,11 +446,8 @@
             appContainer.classList.remove('menu-open');
         });
         
-        // --- ADDED: MOBILE KEYBOARD FIX ---
         userInput.addEventListener('focus', () => {
-            // Give the browser a moment to bring up the keyboard
             setTimeout(() => {
-                // Scroll the input form into view
                 chatForm.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }, 300);
         });
