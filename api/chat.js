@@ -1,13 +1,13 @@
-// File: /api/chat.js
+// File: /api/chat.js - CORRECTED FOR NETLIFY
 
-export default async function handler(request, response) {
-  // 1. Get the conversation history from the user's request
-  const { conversationHistory } = await request.json();
+exports.handler = async function(event) {
+  // 1. Get the conversation history from the event body (Netlify format)
+  const { conversationHistory } = JSON.parse(event.body);
 
   // 2. Get the secret API key from the server's environment variables
   const apiKey = process.env.GEMINI_API_KEY;
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  
+
   // 3. Keep the same system instruction
   const systemInstruction = {
     parts: [{
@@ -49,10 +49,17 @@ You are **strictly focused** on DSA and have no patience for small talk or off-t
 
     const data = await googleApiResponse.json();
 
-    // 5. Send the AI's response back to the frontend
-    response.status(200).json(data);
+    // 5. Return the response in the format Netlify expects
+    return {
+      statusCode: 200,
+      body: JSON.stringify(data),
+    };
 
   } catch (error) {
-    response.status(500).json({ error: 'Failed to fetch from Google API' });
+    // 6. Return an error in the format Netlify expects
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Failed to fetch from Google API' }),
+    };
   }
-}
+};
