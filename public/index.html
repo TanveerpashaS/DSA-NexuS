@@ -224,49 +224,87 @@
             return messageWrapper;
         }
         function typeWriterEffect(element, text) {
-            return new Promise(resolve => {
-                const parts = text.split(/(```[\s\S]*?```)/g);
-                let partIndex = 0;
-                const processNextPart = () => {
-                    if (partIndex >= parts.length) { resolve(); return; }
-                    const part = parts[partIndex];
-                    if (!part) { partIndex++; processNextPart(); return; }
-                    if (part.startsWith('```')) {
-                        const codeContent = part.slice(3, -3);
-                        const pre = document.createElement('pre');
-                        pre.textContent = codeContent.trim();
-                        element.appendChild(pre);
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
+    return new Promise(resolve => {
+        const parts = text.split(/(```[\s\S]*?```)/g);
+        let partIndex = 0;
+
+        const processNextPart = () => {
+            if (partIndex >= parts.length) {
+                resolve();
+                return;
+            }
+            const part = parts[partIndex];
+            if (!part) {
+                partIndex++;
+                processNextPart();
+                return;
+            }
+
+            if (part.startsWith('```')) {
+                // Handle code blocks instantly
+                const codeContent = part.slice(3, -3).trim();
+                const pre = document.createElement('pre');
+                pre.textContent = codeContent;
+                element.appendChild(pre);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                partIndex++;
+                processNextPart();
+            } else {
+                // Handle regular text with animation and correct markdown parsing
+                const container = document.createElement('div');
+                element.appendChild(container);
+
+                // This function converts a single line of markdown text to HTML
+                const parseMarkdownLine = (line) => {
+                    return line
+                        .replace(/^### (.*$)/g, '<h3>$1</h3>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/^\* (.*$)/g, '<li>$1</li>');
+                };
+                
+                const lines = part.trim().split('\n');
+                let lineIndex = 0;
+
+                const typeNextLine = () => {
+                    if (lineIndex >= lines.length) {
+                        // After all lines are done, wrap any list items in a <ul> tag
+                        const listItems = container.querySelectorAll('li');
+                        if (listItems.length > 0) {
+                            const ul = document.createElement('ul');
+                            listItems.forEach(li => ul.appendChild(li));
+                            container.appendChild(ul);
+                        }
                         partIndex++;
                         processNextPart();
-                    } else {
-                        const lines = part.split('\n').filter(line => line.trim() !== '');
-                        let lineIndex = 0;
-                        const typeNextLine = () => {
-                            if (lineIndex >= lines.length) { partIndex++; processNextPart(); return; }
-                            const p = document.createElement('p');
-                            element.appendChild(p);
-                            let charIndex = 0;
-                            const lineText = lines[lineIndex];
-                            const typing = setInterval(() => {
-                                if (charIndex < lineText.length) {
-                                    p.innerHTML += lineText.charAt(charIndex).replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                                    p.innerHTML = p.innerHTML.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
-                                    charIndex++;
-                                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                                } else {
-                                    clearInterval(typing);
-                                    lineIndex++;
-                                    typeNextLine();
-                                }
-                            }, 10);
-                        }
-                        typeNextLine();
+                        return;
                     }
+
+                    const p = document.createElement('p');
+                    container.appendChild(p);
+                    
+                    let charIndex = 0;
+                    const lineText = lines[lineIndex].trim();
+
+                    const typing = setInterval(() => {
+                        if (charIndex < lineText.length) {
+                            p.textContent += lineText.charAt(charIndex);
+                            charIndex++;
+                            chatWindow.scrollTop = chatWindow.scrollHeight;
+                        } else {
+                            clearInterval(typing);
+                            // Apply markdown formatting AFTER the line is fully typed
+                            p.innerHTML = parseMarkdownLine(p.textContent);
+                            lineIndex++;
+                            typeNextLine();
+                        }
+                    }, 15);
                 }
-                processNextPart();
-            });
-        }
+                typeNextLine();
+            }
+        };
+        processNextPart();
+    });
+}
         async function submitQuery(query) {
             if (!query) return;
             sendButton.disabled = true;

@@ -10,7 +10,7 @@ exports.handler = async function(event) {
 **CONTEXT RULE:** You MUST maintain the context of the conversation. If a user's prompt is a short follow-up (e.g., "code", "why?", "give an example in python"), you must assume it refers to the immediately preceding topic. DO NOT treat it as an off-topic question.
 
 **RESPONSE FORMATTING RULES:**
-- Start main topics with a markdown H3 header (e.g., \`### 🤖 The Analogy\`).
+- Start main topics with a markdown H3 header (e.g., \` 🤖 The Analogy\`).
 - Use markdown bullet points (* item) for all lists and points.
 - Use markdown bold (**text**) for all key terms and titles.
 - NEVER write long, unbroken paragraphs. Break every concept into a separate bullet point.
