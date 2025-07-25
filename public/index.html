@@ -61,6 +61,18 @@
             font-size: 14px; border: 1px solid rgba(255,255,255,0.1);
             white-space: pre-wrap; word-break: break-all;
         }
+        .message-content h3 {
+            margin-bottom: 12px;
+            margin-top: 10px;
+        }
+        .message-content ul {
+            list-style-position: outside;
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+        .message-content li {
+            margin-bottom: 8px;
+        }
         @keyframes aurora-animation { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         body::before, body::after { content: ''; position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax; background-image: radial-gradient(circle, var(--highlight-color) 0%, transparent 40%); opacity: 0.15; filter: blur(100px); animation: aurora-animation 40s linear infinite; z-index: 0; }
@@ -90,9 +102,7 @@
         #send-button:hover { filter: brightness(1.2); }
         #send-button:disabled { background-color: #444; color: #888; cursor: not-allowed; }
         .message-content { padding-top: 2px; width: 100%; }
-        .message-content h3 { margin-bottom: 10px; }
-        .message-content p:not(:last-child) { margin-bottom: 0.75rem; }
-        .message-content ul { padding-left: 20px; margin-bottom: 10px; }
+        .message p:not(:last-child) { margin-bottom: 0.75rem; }
         .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 500; flex-shrink: 0; }
         .bot-avatar { background: var(--bot-msg-color); }
         .user-avatar { background: var(--user-msg-color); color: var(--highlight-color); font-weight: 600; }
@@ -157,7 +167,6 @@
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
         const chatWindow = document.getElementById('chat-window');
-        // THIS LINE WAS MISSING. IT IS NOW FIXED.
         const sendButton = document.getElementById('send-button');
         const welcomeScreen = document.getElementById('welcome-screen');
         const appContainer = document.getElementById('app-container');
@@ -166,15 +175,19 @@
         const API_URL = '/api/chat';
         let conversationHistory = [];
 
+        // --- NEW, CORRECTED TYPEWRITER FUNCTION ---
         function typeWriterEffect(element, text) {
             return new Promise(resolve => {
                 const parts = text.split(/(```[\s\S]*?```)/g);
                 let partIndex = 0;
+
                 const processNextPart = () => {
                     if (partIndex >= parts.length) { resolve(); return; }
                     const part = parts[partIndex];
                     if (!part) { partIndex++; processNextPart(); return; }
+
                     if (part.startsWith('```')) {
+                        // Handle code blocks instantly
                         const codeContent = part.slice(3, -3).trim();
                         const pre = document.createElement('pre');
                         pre.textContent = codeContent;
@@ -183,19 +196,36 @@
                         partIndex++;
                         processNextPart();
                     } else {
-                        let processedHTML = part
-                            .trim()
-                            .replace(/### (.*)/g, '<h3>$1</h3>')
-                            .replace(/^\* (.*)/gm, '<ul><li>$1</li></ul>')
-                            .replace(/<\/ul>\s*<ul>/g, '')
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\*(.*?)\*/g, '<em>$1</em>');
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = processedHTML;
-                        element.appendChild(tempDiv);
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                        partIndex++;
-                        processNextPart();
+                        // Handle regular text with animation
+                        const container = document.createElement('div');
+                        element.appendChild(container);
+                        let charIndex = 0;
+                        const rawText = part.trim();
+
+                        const typing = setInterval(() => {
+                            if (charIndex < rawText.length) {
+                                container.textContent += rawText.charAt(charIndex);
+                                charIndex++;
+                                chatWindow.scrollTop = chatWindow.scrollHeight;
+                            } else {
+                                clearInterval(typing);
+                                // Apply markdown formatting AFTER the typing is complete
+                                let formattedHTML = rawText
+                                    .replace(/### (.*)/g, '<h3>$1</h3>')
+                                    .replace(/(\r\n|\n|\r)/g, '<br>') // Keep line breaks
+                                    .replace(/\* \*\*(.*?)\*\*/g, '<li><strong>$1</strong></li>') // Bold list items
+                                    .replace(/\* (.*)/g, '<li>$1</li>') // Regular list items
+                                    .replace(/<\/li><br><li>/g, '</li><li>') // clean up list breaks
+                                    .replace(/<\/li><br><h3>/g, '</li></ul><h3>') // close list before header
+                                    .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>') // wrap lists
+                                    .replace(/<\/ul>\s*<ul>/g, ''); // merge lists
+
+                                container.innerHTML = formattedHTML;
+                                chatWindow.scrollTop = chatWindow.scrollHeight;
+                                partIndex++;
+                                processNextPart();
+                            }
+                        }, 15); // Typing speed
                     }
                 };
                 processNextPart();
