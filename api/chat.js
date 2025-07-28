@@ -30,7 +30,7 @@ exports.handler = async function(event) {
 
 **RESPONSE STRATEGY:**
 
-1.  **For broad, explanatory questions** (e.g., "Explain Hash Map"):
+1.  **For broad, explanatory questions** (e.g., "Explain Hash Map,Dynamic Programming ,any DSA topics etc"):
     Use the analogy-first method, following this strict template:
     \`\`\`markdown
      🤖 The Hash Table Analogy: A Library's Card Catalog
