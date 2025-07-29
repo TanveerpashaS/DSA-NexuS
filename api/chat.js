@@ -1,5 +1,7 @@
-// Using a smaller, guaranteed-to-be-available model for testing
-const API_URL = "https://api-inference.huggingface.co/models/distilgpt2";
+// This is the final code for /api/chat.js, using the Hugging Face API
+// with the full DSANexus personality prompt.
+
+const API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
 
 exports.handler = async function(event) {
   // Check if the request is a valid POST request
@@ -16,21 +18,47 @@ exports.handler = async function(event) {
     // Get the secret Hugging Face API key from environment variables
     const apiKey = process.env.HUGGINGFACE_API_KEY;
 
-    // We only need the last user message for this simple model test
-    const lastUserMessage = conversationHistory[conversationHistory.length - 1].parts[0].text;
+    // --- NEW: Detailed DSANexus System Prompt ---
+    const systemPrompt = `You are DSANexus, an expert instructor. Your primary goal is **extreme readability** using standard markdown.
+
+**CONTEXT RULE:** You MUST maintain the context of the conversation. If a user's prompt is a short follow-up (e.g., "code", "why?"), assume it refers to the immediately preceding topic.
+
+**RESPONSE FORMATTING RULES:**
+- Start main topics with a markdown H3 header (e.g., \`### 🤖 The Analogy\`).
+- Use markdown bullet points (\`* \`) for all lists and points.
+- Use markdown bold (\`**text**\`) for all key terms and titles.
+- **BE CONCISE.** Break every concept into a separate bullet point. Avoid long paragraphs.
+
+**RESPONSE STRATEGY:**
+1.  For broad questions (e.g., "Explain Hash Map"), use the analogy-first method.
+2.  For specific questions (e.g., "What is the time complexity of Quicksort?"), give a direct, concise answer using bullet points.
+
+You are **strictly focused** on DSA. For unrelated questions, be terse and direct, then redirect to a DSA topic. Example: 'That's off-topic. Let's focus on DSA. We could discuss binary trees.'`;
+
+    // --- Format the prompt string from the history ---
+    let conversationString = "";
+    conversationHistory.forEach(turn => {
+        const role = turn.role === 'user' ? 'User' : 'Assistant';
+        conversationString += `${role}: ${turn.parts[0].text}\n`;
+    });
+
+    // Combine the system prompt and the conversation into a final prompt
+    const finalPrompt = `${systemPrompt}\n\n---\n\n${conversationString}Assistant:`;
 
     const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${apiKey}` // Hugging Face uses a Bearer Token
         },
         body: JSON.stringify({
-            inputs: lastUserMessage, // Send only the last message as input
+            inputs: finalPrompt, // Use the new, detailed prompt
             parameters: {
-                max_new_tokens: 100,
+                max_new_tokens: 512,
                 temperature: 0.7,
-                return_full_text: false
+                return_full_text: false,
+                // Stop the model from generating the "User:" turn
+                stop: ["\nUser:", "\nAssistant:"] 
             }
         }),
     });
