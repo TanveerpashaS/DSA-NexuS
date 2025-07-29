@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
-        /* All CSS is the same and correct */
         :root {
             --bg-color: #121212; --sidebar-color: rgba(28, 28, 30, 0.95); --header-color: rgba(28, 28, 30, 0.8);
             --user-msg-color: #2c2c34; --bot-msg-color: #1e1f24; --text-color: #e2e2e2; --highlight-color: #FF6F61;
@@ -158,16 +157,14 @@
             contentDiv.classList.add('message-content');
             messageWrapper.appendChild(avatar);
             messageWrapper.appendChild(contentDiv);
+            chatWindow.appendChild(messageWrapper);
             
             if (sender === 'bot') {
                 await typeWriterEffect(contentDiv, text);
             } else {
-                const p = document.createElement('p');
-                p.textContent = text;
-                contentDiv.appendChild(p);
+                contentDiv.textContent = text;
             }
             
-            chatWindow.appendChild(messageWrapper);
             chatWindow.scrollTop = chatWindow.scrollHeight;
             return messageWrapper;
         }
@@ -191,7 +188,6 @@
                     }
 
                     if (part.startsWith('```')) {
-                        // Handle code blocks instantly
                         const codeContent = part.slice(3, -3).trim();
                         const pre = document.createElement('pre');
                         pre.textContent = codeContent;
@@ -200,7 +196,6 @@
                         partIndex++;
                         processNextPart();
                     } else {
-                        // Handle regular text with animation and formatting at the end
                         const container = document.createElement('div');
                         element.appendChild(container);
                         
@@ -214,13 +209,13 @@
                                 chatWindow.scrollTop = chatWindow.scrollHeight;
                             } else {
                                 clearInterval(typing);
-                                // Apply markdown formatting AFTER typing is complete using the marked.js library
+                                // Apply markdown formatting AFTER typing is complete
                                 container.innerHTML = marked.parse(rawText);
                                 chatWindow.scrollTop = chatWindow.scrollHeight;
                                 partIndex++;
                                 processNextPart();
                             }
-                        }, 15); // Adjust typing speed here (lower is faster)
+                        }, 20); // Adjust typing speed here (lower is faster)
                     }
                 };
                 processNextPart();
