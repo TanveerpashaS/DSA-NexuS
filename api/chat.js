@@ -1,5 +1,5 @@
-// We are now using a different open-source model that does not require special access
-const API_URL = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta";
+// Using a smaller, guaranteed-to-be-available model for testing
+const API_URL = "https://api-inference.huggingface.co/models/distilgpt2";
 
 exports.handler = async function(event) {
   // Check if the request is a valid POST request
@@ -16,25 +16,21 @@ exports.handler = async function(event) {
     // Get the secret Hugging Face API key from environment variables
     const apiKey = process.env.HUGGINGFACE_API_KEY;
 
-    // Format the prompt for the new model
-    let prompt = "You are a helpful DSA tutor. Your answers are concise and use markdown formatting.\n";
-    conversationHistory.forEach(turn => {
-        prompt += `${turn.role === 'user' ? 'User' : 'Assistant'}: ${turn.parts[0].text}\n`;
-    });
-    prompt += "Assistant:"; // Prompt the model to respond
+    // We only need the last user message for this simple model test
+    const lastUserMessage = conversationHistory[conversationHistory.length - 1].parts[0].text;
 
     const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}` // Hugging Face uses a Bearer Token
+            'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-            inputs: prompt,
+            inputs: lastUserMessage, // Send only the last message as input
             parameters: {
-                max_new_tokens: 512, // Limit response length
+                max_new_tokens: 100,
                 temperature: 0.7,
-                return_full_text: false // Only get the generated part
+                return_full_text: false
             }
         }),
     });
