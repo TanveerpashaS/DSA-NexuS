@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
+        /* All CSS is the same and correct */
         :root {
             --bg-color: #121212; --sidebar-color: rgba(28, 28, 30, 0.95); --header-color: rgba(28, 28, 30, 0.8);
             --user-msg-color: #2c2c34; --bot-msg-color: #1e1f24; --text-color: #e2e2e2; --highlight-color: #FF6F61;
@@ -27,13 +28,10 @@
         .chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; }
         .message { max-width: 100%; padding: 12px 15px; display: flex; gap: 12px; animation: fadeInUp 0.4s ease-out; line-height: 1.7; }
         .message-content pre { background-color: #0d0d0d; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 1rem 0; font-family: var(--font-code); font-size: 14px; border: 1px solid rgba(255,255,255,0.1); white-space: pre-wrap; word-break: break-all; }
-        
-        /* ADDED: Styles for properly formatted markdown */
-        .message-content h3 { margin-top: 1.2rem; margin-bottom: 0.8rem; }
+        .message-content h3 { margin-top: 1.2rem; margin-bottom: 0.8rem; font-size: 1.1em; }
         .message-content ul { padding-left: 25px; margin-bottom: 1rem; }
         .message-content li { margin-bottom: 0.5rem; }
         .message-content p:last-child { margin-bottom: 0; }
-
         @keyframes aurora-animation { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         body::before, body::after { content: ''; position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax; background-image: radial-gradient(circle, var(--highlight-color) 0%, transparent 40%); opacity: 0.15; filter: blur(100px); animation: aurora-animation 40s linear infinite; z-index: 0; }
@@ -162,17 +160,71 @@
             messageWrapper.appendChild(contentDiv);
             
             if (sender === 'bot') {
-                // Use the marked.js library to instantly render perfect HTML
-                contentDiv.innerHTML = marked.parse(text);
+                await typeWriterEffect(contentDiv, text);
             } else {
                 const p = document.createElement('p');
                 p.textContent = text;
                 contentDiv.appendChild(p);
             }
-
+            
             chatWindow.appendChild(messageWrapper);
             chatWindow.scrollTop = chatWindow.scrollHeight;
             return messageWrapper;
+        }
+
+        // --- FINAL, CORRECTED TYPEWRITER FUNCTION ---
+        function typeWriterEffect(element, text) {
+            return new Promise(resolve => {
+                const parts = text.split(/(```[\s\S]*?```)/g);
+                let partIndex = 0;
+
+                const processNextPart = () => {
+                    if (partIndex >= parts.length) {
+                        resolve();
+                        return;
+                    }
+                    const part = parts[partIndex];
+                    if (!part) {
+                        partIndex++;
+                        processNextPart();
+                        return;
+                    }
+
+                    if (part.startsWith('```')) {
+                        // Handle code blocks instantly
+                        const codeContent = part.slice(3, -3).trim();
+                        const pre = document.createElement('pre');
+                        pre.textContent = codeContent;
+                        element.appendChild(pre);
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                        partIndex++;
+                        processNextPart();
+                    } else {
+                        // Handle regular text with animation and formatting at the end
+                        const container = document.createElement('div');
+                        element.appendChild(container);
+                        
+                        let charIndex = 0;
+                        const rawText = part.trim();
+
+                        const typing = setInterval(() => {
+                            if (charIndex < rawText.length) {
+                                container.textContent += rawText.charAt(charIndex);
+                                charIndex++;
+                                chatWindow.scrollTop = chatWindow.scrollHeight;
+                            } else {
+                                clearInterval(typing);
+                                // Apply markdown formatting AFTER typing is complete using the marked.js library
+                                container.innerHTML = marked.parse(rawText);
+                                chatWindow.scrollTop = chatWindow.scrollHeight;
+                                partIndex++;
+                                processNextPart();
+                            }
+                        }, 15); // Adjust typing speed here (lower is faster)
+                    }
+                };
+                processNextPart();
+            });
         }
         
         async function submitQuery(query) {
@@ -198,11 +250,10 @@
                     throw new Error(data.error || 'An unknown network error occurred.');
                 }
                 
-                let botResponse = "Sorry, I couldn't generate a response.";
+                let botResponse = "Sorry, response blocked or unavailable.";
                 if (data.candidates?.[0]?.content) {
                     botResponse = data.candidates[0].content.parts[0].text;
                 } else if (data.promptFeedback) {
-                    // Handle cases where the content is blocked by safety filters
                     botResponse = `Response blocked. Reason: ${data.promptFeedback.blockReason}`;
                 }
 
@@ -219,7 +270,7 @@
             }
         }
 
-        // --- Event Listeners ---
+        // Event Listeners
         chatForm.addEventListener('submit', (e) => { e.preventDefault(); submitQuery(userInput.value.trim()); });
         document.querySelectorAll('.new-chat-btn').forEach(button => { button.addEventListener('click', () => { const messages = chatWindow.querySelectorAll('.message'); messages.forEach(msg => msg.remove()); const welcome = document.getElementById('welcome-screen'); if (welcome) { welcome.style.display = 'flex'; } conversationHistory = []; appContainer.classList.remove('menu-open'); }); });
         document.querySelectorAll('.example-prompt').forEach(button => { button.addEventListener('click', () => { const promptText = button.getAttribute('data-prompt'); submitQuery(promptText); }); });
