@@ -158,67 +158,36 @@
             messageWrapper.appendChild(avatar);
             messageWrapper.appendChild(contentDiv);
             chatWindow.appendChild(messageWrapper);
-            
+
             if (sender === 'bot') {
-                await typeWriterEffect(contentDiv, text);
+                await streamFormattedText(contentDiv, text);
             } else {
                 contentDiv.textContent = text;
             }
             
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            return messageWrapper;
         }
 
-        // --- FINAL, CORRECTED TYPEWRITER FUNCTION ---
-        function typeWriterEffect(element, text) {
+        // --- FINAL, CORRECTED "STREAMING" FUNCTION ---
+        function streamFormattedText(element, text) {
             return new Promise(resolve => {
-                const parts = text.split(/(```[\s\S]*?```)/g);
-                let partIndex = 0;
+                // Instantly parse the entire markdown text to its final HTML structure
+                const finalHtml = marked.parse(text);
 
-                const processNextPart = () => {
-                    if (partIndex >= parts.length) {
-                        resolve();
-                        return;
-                    }
-                    const part = parts[partIndex];
-                    if (!part) {
-                        partIndex++;
-                        processNextPart();
-                        return;
-                    }
-
-                    if (part.startsWith('```')) {
-                        const codeContent = part.slice(3, -3).trim();
-                        const pre = document.createElement('pre');
-                        pre.textContent = codeContent;
-                        element.appendChild(pre);
+                // Split the final HTML into an array of tags and words/spaces
+                const chunks = finalHtml.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
+                
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < chunks.length) {
+                        element.innerHTML += chunks[i];
+                        i++;
                         chatWindow.scrollTop = chatWindow.scrollHeight;
-                        partIndex++;
-                        processNextPart();
                     } else {
-                        const container = document.createElement('div');
-                        element.appendChild(container);
-                        
-                        let charIndex = 0;
-                        const rawText = part.trim();
-
-                        const typing = setInterval(() => {
-                            if (charIndex < rawText.length) {
-                                container.textContent += rawText.charAt(charIndex);
-                                charIndex++;
-                                chatWindow.scrollTop = chatWindow.scrollHeight;
-                            } else {
-                                clearInterval(typing);
-                                // Apply markdown formatting AFTER typing is complete
-                                container.innerHTML = marked.parse(rawText);
-                                chatWindow.scrollTop = chatWindow.scrollHeight;
-                                partIndex++;
-                                processNextPart();
-                            }
-                        }, 20); // Adjust typing speed here (lower is faster)
+                        clearInterval(interval);
+                        resolve();
                     }
-                };
-                processNextPart();
+                }, 35); // Adjust speed of word reveal here
             });
         }
         
@@ -239,7 +208,7 @@
                     body: JSON.stringify(requestBody)
                 });
                 const data = await response.json();
-                loadingMessage.remove();
+                loadingMessage.remove(); // Remove the "Thinking..." message
 
                 if (!response.ok) {
                     throw new Error(data.error || 'An unknown network error occurred.');
@@ -253,7 +222,7 @@
                 }
 
                 conversationHistory.push({ role: "model", parts: [{ text: botResponse }] });
-                await displayMessage(botResponse, 'bot');
+                await displayMessage(botResponse, 'bot'); // Display the actual bot response
             } catch (error) {
                 if(loadingMessage) loadingMessage.remove();
                 await displayMessage(`Error: ${error.message}`, 'bot');
