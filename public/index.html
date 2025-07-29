@@ -139,35 +139,46 @@
             if (welcomeScreen) welcomeScreen.style.display = 'none';
         }
 
-        async function displayMessage(text, sender) {
-            hideWelcomeScreen();
-            const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('message');
-            const avatar = document.createElement('div');
-            avatar.classList.add('avatar', `${sender}-avatar`);
-            if (sender === 'bot') {
-                const logoContainer = document.createElement('div');
-                logoContainer.className = 'logo';
-                createLogo(logoContainer);
-                avatar.appendChild(logoContainer);
-            } else {
-                avatar.textContent = 'Y';
-            }
-            const contentDiv = document.createElement('div');
-            contentDiv.classList.add('message-content');
-            messageWrapper.appendChild(avatar);
-            messageWrapper.appendChild(contentDiv);
-            chatWindow.appendChild(messageWrapper);
+       // REPLACE your old displayMessage function with this one
 
-            if (sender === 'bot') {
-                await streamFormattedText(contentDiv, text);
-            } else {
-                contentDiv.textContent = text;
-            }
-            
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
+async function displayMessage(text, sender) {
+    hideWelcomeScreen();
+    
+    // Create the basic message structure
+    const messageWrapper = document.createElement('div');
+    messageWrapper.classList.add('message');
+    
+    const avatar = document.createElement('div');
+    avatar.classList.add('avatar', `${sender}-avatar`);
+    
+    if (sender === 'bot') {
+        const logoContainer = document.createElement('div');
+        logoContainer.className = 'logo';
+        createLogo(logoContainer);
+        avatar.appendChild(logoContainer);
+    } else {
+        avatar.textContent = 'Y';
+    }
 
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('message-content');
+    
+    messageWrapper.appendChild(avatar);
+    messageWrapper.appendChild(contentDiv);
+    chatWindow.appendChild(messageWrapper);
+
+    // Now, handle filling the content
+    if (sender === 'bot') {
+        // Correctly call and wait for the streaming function
+        await streamFormattedText(contentDiv, text);
+    } else {
+        // User text doesn't need animation
+        contentDiv.textContent = text;
+    }
+    
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return messageWrapper;
+}
         // --- FINAL, CORRECTED "STREAMING" FUNCTION ---
         function streamFormattedText(element, text) {
             return new Promise(resolve => {
