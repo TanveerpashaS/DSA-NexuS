@@ -2,7 +2,7 @@
 
 > A specialized AI tutor for Data Structures & Algorithms, powered by the Google Gemini API and built with a secure, serverless backend.
 
-🔗 [**View the Live Demo**](https://dsa-nexus.netlify.app/)
+🔗 [**View the Live Demo**] (**currently working on error)(https://dsa-nexus.netlify.app/)
 
 
 ---
