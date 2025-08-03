@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
         :root {
             --bg-color: #121212; --sidebar-color: rgba(28, 28, 30, 0.95); --header-color: rgba(28, 28, 30, 0.8);
@@ -139,13 +140,15 @@
             if (welcomeScreen) welcomeScreen.style.display = 'none';
         }
 
-        // --- FINAL, ROBUST DISPLAY FUNCTION ---
         async function displayMessage(text, sender) {
             hideWelcomeScreen();
+            
             const messageWrapper = document.createElement('div');
             messageWrapper.classList.add('message');
+            
             const avatar = document.createElement('div');
             avatar.classList.add('avatar', `${sender}-avatar`);
+            
             if (sender === 'bot') {
                 const logoContainer = document.createElement('div');
                 logoContainer.className = 'logo';
@@ -154,42 +157,23 @@
             } else {
                 avatar.textContent = 'Y';
             }
+
             const contentDiv = document.createElement('div');
             contentDiv.classList.add('message-content');
+            
             messageWrapper.appendChild(avatar);
             messageWrapper.appendChild(contentDiv);
             chatWindow.appendChild(messageWrapper);
 
             if (sender === 'bot') {
-                await streamFormattedText(contentDiv, text); // Call the restored animation function
+                contentDiv.innerHTML = marked.parse(text);
             } else {
                 contentDiv.textContent = text;
             }
             
             chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-        
-        // --- RESTORED AND IMPROVED STREAMING/ANIMATION FUNCTION ---
-        function streamFormattedText(element, text) {
-            return new Promise(resolve => {
-                // Instantly parse the entire markdown text to its final HTML structure
-                const finalHtml = marked.parse(text);
-
-                // Split the final HTML into an array of tags, words, and spaces
-                const chunks = finalHtml.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
-                
-                let i = 0;
-                const interval = setInterval(() => {
-                    if (i < chunks.length) {
-                        element.innerHTML += chunks[i];
-                        i++;
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                    } else {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 35); // Adjust speed of word reveal here
-            });
+            // THIS LINE WAS MISSING. IT IS NOW FIXED.
+            return messageWrapper;
         }
         
         async function submitQuery(query) {
