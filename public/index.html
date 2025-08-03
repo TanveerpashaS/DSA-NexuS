@@ -119,6 +119,7 @@
         </main>
         <div id="mobile-menu-overlay"></div>
     </div>
+
     <script>
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
@@ -139,15 +140,12 @@
         }
 
         // --- FINAL, ROBUST DISPLAY FUNCTION ---
-        function displayMessage(text, sender) {
+        async function displayMessage(text, sender) {
             hideWelcomeScreen();
-            
             const messageWrapper = document.createElement('div');
             messageWrapper.classList.add('message');
-            
             const avatar = document.createElement('div');
             avatar.classList.add('avatar', `${sender}-avatar`);
-            
             if (sender === 'bot') {
                 const logoContainer = document.createElement('div');
                 logoContainer.className = 'logo';
@@ -156,24 +154,42 @@
             } else {
                 avatar.textContent = 'Y';
             }
-
             const contentDiv = document.createElement('div');
             contentDiv.classList.add('message-content');
-            
             messageWrapper.appendChild(avatar);
             messageWrapper.appendChild(contentDiv);
             chatWindow.appendChild(messageWrapper);
 
-            // This is the simplest, most reliable way to render.
-            // It is fast and uses the professional marked.js library for perfect formatting.
             if (sender === 'bot') {
-                contentDiv.innerHTML = marked.parse(text);
+                await streamFormattedText(contentDiv, text); // Call the restored animation function
             } else {
                 contentDiv.textContent = text;
             }
             
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            return messageWrapper; // Return the created element
+        }
+        
+        // --- RESTORED AND IMPROVED STREAMING/ANIMATION FUNCTION ---
+        function streamFormattedText(element, text) {
+            return new Promise(resolve => {
+                // Instantly parse the entire markdown text to its final HTML structure
+                const finalHtml = marked.parse(text);
+
+                // Split the final HTML into an array of tags, words, and spaces
+                const chunks = finalHtml.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
+                
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < chunks.length) {
+                        element.innerHTML += chunks[i];
+                        i++;
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    } else {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 35); // Adjust speed of word reveal here
+            });
         }
         
         async function submitQuery(query) {
