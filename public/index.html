@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
         :root {
             --bg-color: #121212; --sidebar-color: rgba(28, 28, 30, 0.95); --header-color: rgba(28, 28, 30, 0.8);
@@ -138,44 +139,67 @@
             if (welcomeScreen) welcomeScreen.style.display = 'none';
         }
 
-        // --- FINAL, ROBUST DISPLAY FUNCTION ---
-        // This function renders the response instantly and perfectly, just like ChatGPT.
-        // It uses the professional `marked.js` library for formatting.
-        async function displayMessage(text, sender) {
-            hideWelcomeScreen();
-            
-            const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('message');
-            
-            const avatar = document.createElement('div');
-            avatar.classList.add('avatar', `${sender}-avatar`);
-            
-            if (sender === 'bot') {
-                const logoContainer = document.createElement('div');
-                logoContainer.className = 'logo';
-                createLogo(logoContainer);
-                avatar.appendChild(logoContainer);
-            } else {
-                avatar.textContent = 'Y';
-            }
+       // REPLACE your old displayMessage function with this one
 
-            const contentDiv = document.createElement('div');
-            contentDiv.classList.add('message-content');
-            
-            messageWrapper.appendChild(avatar);
-            messageWrapper.appendChild(contentDiv);
-            chatWindow.appendChild(messageWrapper);
+async function displayMessage(text, sender) {
+    hideWelcomeScreen();
+    
+    // Create the basic message structure
+    const messageWrapper = document.createElement('div');
+    messageWrapper.classList.add('message');
+    
+    const avatar = document.createElement('div');
+    avatar.classList.add('avatar', `${sender}-avatar`);
+    
+    if (sender === 'bot') {
+        const logoContainer = document.createElement('div');
+        logoContainer.className = 'logo';
+        createLogo(logoContainer);
+        avatar.appendChild(logoContainer);
+    } else {
+        avatar.textContent = 'Y';
+    }
 
-            if (sender === 'bot') {
-                // Instantly parse the entire markdown text to its final HTML structure.
-                // This is fast, reliable, and bug-free.
-                contentDiv.innerHTML = marked.parse(text);
-            } else {
-                // User text doesn't need animation or parsing.
-                contentDiv.textContent = text;
-            }
-            
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('message-content');
+    
+    messageWrapper.appendChild(avatar);
+    messageWrapper.appendChild(contentDiv);
+    chatWindow.appendChild(messageWrapper);
+
+    // Now, handle filling the content
+    if (sender === 'bot') {
+        // Correctly call and wait for the streaming function
+        await streamFormattedText(contentDiv, text);
+    } else {
+        // User text doesn't need animation
+        contentDiv.textContent = text;
+    }
+    
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return messageWrapper;
+}
+        // --- FINAL, CORRECTED "STREAMING" FUNCTION ---
+        function streamFormattedText(element, text) {
+            return new Promise(resolve => {
+                // Instantly parse the entire markdown text to its final HTML structure
+                const finalHtml = marked.parse(text);
+
+                // Split the final HTML into an array of tags and words/spaces
+                const chunks = finalHtml.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
+                
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < chunks.length) {
+                        element.innerHTML += chunks[i];
+                        i++;
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    } else {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 35); // Adjust speed of word reveal here
+            });
         }
         
         async function submitQuery(query) {
@@ -195,7 +219,7 @@
                     body: JSON.stringify(requestBody)
                 });
                 const data = await response.json();
-                loadingMessage.remove();
+                loadingMessage.remove(); // Remove the "Thinking..." message
 
                 if (!response.ok) {
                     throw new Error(data.error || 'An unknown network error occurred.');
@@ -209,7 +233,7 @@
                 }
 
                 conversationHistory.push({ role: "model", parts: [{ text: botResponse }] });
-                await displayMessage(botResponse, 'bot');
+                await displayMessage(botResponse, 'bot'); // Display the actual bot response
             } catch (error) {
                 if(loadingMessage) loadingMessage.remove();
                 await displayMessage(`Error: ${error.message}`, 'bot');
