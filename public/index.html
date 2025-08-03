@@ -140,15 +140,13 @@
             if (welcomeScreen) welcomeScreen.style.display = 'none';
         }
 
+        // --- FINAL, ROBUST DISPLAY FUNCTION WITH ANIMATION ---
         async function displayMessage(text, sender) {
             hideWelcomeScreen();
-            
             const messageWrapper = document.createElement('div');
             messageWrapper.classList.add('message');
-            
             const avatar = document.createElement('div');
             avatar.classList.add('avatar', `${sender}-avatar`);
-            
             if (sender === 'bot') {
                 const logoContainer = document.createElement('div');
                 logoContainer.className = 'logo';
@@ -157,23 +155,45 @@
             } else {
                 avatar.textContent = 'Y';
             }
-
             const contentDiv = document.createElement('div');
             contentDiv.classList.add('message-content');
-            
             messageWrapper.appendChild(avatar);
             messageWrapper.appendChild(contentDiv);
             chatWindow.appendChild(messageWrapper);
 
             if (sender === 'bot') {
-                contentDiv.innerHTML = marked.parse(text);
+                // Call the new word-by-word animation function
+                await streamFormattedText(contentDiv, text);
             } else {
                 contentDiv.textContent = text;
             }
             
             chatWindow.scrollTop = chatWindow.scrollHeight;
-            // THIS LINE WAS MISSING. IT IS NOW FIXED.
             return messageWrapper;
+        }
+
+        // --- NEW WORD-BY-WORD "STREAMING" FUNCTION ---
+        function streamFormattedText(element, text) {
+            return new Promise(resolve => {
+                // 1. Instantly parse the entire markdown text to its final HTML structure
+                const finalHtml = marked.parse(text);
+
+                // 2. Split the final HTML into an array of tags, words, and spaces
+                const chunks = finalHtml.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
+                
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < chunks.length) {
+                        // 3. Append one chunk at a time for a smooth reveal effect
+                        element.innerHTML += chunks[i];
+                        i++;
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    } else {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 35); // Adjust speed of word reveal here
+            });
         }
         
         async function submitQuery(query) {
