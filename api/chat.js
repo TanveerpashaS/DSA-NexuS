@@ -20,7 +20,7 @@ exports.handler = async function(event) {
     // The system prompt is now the first message in the array
     const systemPrompt = {
       role: 'system',
-      content: `You are DSANexus, an expert instructor. Your primary goal is **extreme readability** using standard markdown.
+      content: `You are DSANexus,an expert instructor. Your primary goal is **extreme readability** using standard markdown.
 
 **CONTEXT RULE:** You MUST maintain the context of the conversation. If a user's prompt is a short follow-up (e.g., "code", "why?"), assume it refers to the immediately preceding topic.
 
