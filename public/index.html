@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
     <style>
         :root {
             --bg-color: #121212; --sidebar-color: rgba(28, 28, 30, 0.95); --header-color: rgba(28, 28, 30, 0.8);
@@ -26,7 +25,8 @@
         .chat-container { width: 100%; max-width: 800px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; }
         .chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; }
         .message { max-width: 100%; padding: 12px 15px; display: flex; gap: 12px; animation: fadeInUp 0.4s ease-out; line-height: 1.7; }
-        .message-content pre { background-color: #0d0d0d; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 1rem 0; font-family: var(--font-code); font-size: 14px; border: 1px solid rgba(255,255,255,0.1); white-space: pre-wrap; word-break: break-all; }
+        .message-content pre { background-color: #0d0d0d; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; font-family: var(--font-code); font-size: 14px; border: 1px solid rgba(255,255,255,0.1); white-space: pre-wrap; word-wrap: break-word; }
+        .message-content code { background-color: #2b2d42; padding: 2px 4px; border-radius: 4px; font-family: var(--font-code); }
         .message-content h3 { margin-top: 1.2rem; margin-bottom: 0.8rem; font-size: 1.1em; }
         .message-content ul { padding-left: 25px; margin-bottom: 1rem; }
         .message-content li { margin-bottom: 0.5rem; }
@@ -119,7 +119,6 @@
         </main>
         <div id="mobile-menu-overlay"></div>
     </div>
-
     <script>
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
@@ -139,67 +138,42 @@
             if (welcomeScreen) welcomeScreen.style.display = 'none';
         }
 
-       // REPLACE your old displayMessage function with this one
+        // --- FINAL, ROBUST DISPLAY FUNCTION ---
+        function displayMessage(text, sender) {
+            hideWelcomeScreen();
+            
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('message');
+            
+            const avatar = document.createElement('div');
+            avatar.classList.add('avatar', `${sender}-avatar`);
+            
+            if (sender === 'bot') {
+                const logoContainer = document.createElement('div');
+                logoContainer.className = 'logo';
+                createLogo(logoContainer);
+                avatar.appendChild(logoContainer);
+            } else {
+                avatar.textContent = 'Y';
+            }
 
-async function displayMessage(text, sender) {
-    hideWelcomeScreen();
-    
-    // Create the basic message structure
-    const messageWrapper = document.createElement('div');
-    messageWrapper.classList.add('message');
-    
-    const avatar = document.createElement('div');
-    avatar.classList.add('avatar', `${sender}-avatar`);
-    
-    if (sender === 'bot') {
-        const logoContainer = document.createElement('div');
-        logoContainer.className = 'logo';
-        createLogo(logoContainer);
-        avatar.appendChild(logoContainer);
-    } else {
-        avatar.textContent = 'Y';
-    }
+            const contentDiv = document.createElement('div');
+            contentDiv.classList.add('message-content');
+            
+            messageWrapper.appendChild(avatar);
+            messageWrapper.appendChild(contentDiv);
+            chatWindow.appendChild(messageWrapper);
 
-    const contentDiv = document.createElement('div');
-    contentDiv.classList.add('message-content');
-    
-    messageWrapper.appendChild(avatar);
-    messageWrapper.appendChild(contentDiv);
-    chatWindow.appendChild(messageWrapper);
-
-    // Now, handle filling the content
-    if (sender === 'bot') {
-        // Correctly call and wait for the streaming function
-        await streamFormattedText(contentDiv, text);
-    } else {
-        // User text doesn't need animation
-        contentDiv.textContent = text;
-    }
-    
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-    return messageWrapper;
-}
-        // --- FINAL, CORRECTED "STREAMING" FUNCTION ---
-        function streamFormattedText(element, text) {
-            return new Promise(resolve => {
-                // Instantly parse the entire markdown text to its final HTML structure
-                const finalHtml = marked.parse(text);
-
-                // Split the final HTML into an array of tags and words/spaces
-                const chunks = finalHtml.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
-                
-                let i = 0;
-                const interval = setInterval(() => {
-                    if (i < chunks.length) {
-                        element.innerHTML += chunks[i];
-                        i++;
-                        chatWindow.scrollTop = chatWindow.scrollHeight;
-                    } else {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 35); // Adjust speed of word reveal here
-            });
+            // This is the simplest, most reliable way to render.
+            // It is fast and uses the professional marked.js library for perfect formatting.
+            if (sender === 'bot') {
+                contentDiv.innerHTML = marked.parse(text);
+            } else {
+                contentDiv.textContent = text;
+            }
+            
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return messageWrapper; // Return the created element
         }
         
         async function submitQuery(query) {
@@ -219,7 +193,7 @@ async function displayMessage(text, sender) {
                     body: JSON.stringify(requestBody)
                 });
                 const data = await response.json();
-                loadingMessage.remove(); // Remove the "Thinking..." message
+                loadingMessage.remove();
 
                 if (!response.ok) {
                     throw new Error(data.error || 'An unknown network error occurred.');
@@ -233,7 +207,7 @@ async function displayMessage(text, sender) {
                 }
 
                 conversationHistory.push({ role: "model", parts: [{ text: botResponse }] });
-                await displayMessage(botResponse, 'bot'); // Display the actual bot response
+                await displayMessage(botResponse, 'bot');
             } catch (error) {
                 if(loadingMessage) loadingMessage.remove();
                 await displayMessage(`Error: ${error.message}`, 'bot');
