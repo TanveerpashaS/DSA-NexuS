@@ -10,7 +10,7 @@
 
 ## About This Project
 
-DSANexus was built as a hands-on project to understand the fundamentals of building a full-stack application from scratch. The goal was not just to create a chatbot, but to learn how to securely interact with powerful third-party APIs, engineer a unique personality for an AI model, and deploy a modern web application.
+DSA-Nexus was built as a hands-on project to understand the fundamentals of building a full-stack application from scratch. The goal was not just to create a chatbot, but to learn how to securely interact with powerful third-party APIs, engineer a unique personality for an AI model, and deploy a modern web application.
 
 This app is built with only **HTML, CSS, and vanilla JavaScript** on the frontend, and a simple Node.js serverless function on the backend, demonstrating that powerful applications don't always require heavy frameworks.
 
