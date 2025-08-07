@@ -1,4 +1,4 @@
-##  DSANexus
+##  DSA-Nexus
 
 > A specialized AI tutor for Data Structures & Algorithms, powered by the Google Gemini API and built with a secure, serverless backend.
 
